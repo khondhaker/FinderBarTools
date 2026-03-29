@@ -5,6 +5,7 @@ import SwiftUI
 final class AppModel: ObservableObject {
     let actionService = FinderActionService()
     let shortcutStore = ShortcutStore()
+    let launchAtLoginManager = LaunchAtLoginManager()
     private var hotkeyManager: HotKeyManager?
 
     init() {
@@ -19,9 +20,5 @@ final class AppModel: ObservableObject {
 
     func shortcutLabel(for action: FinderActionService.Action) -> String {
         shortcutStore.shortcut(for: action).displayString
-    }
-
-    func openSettingsFallback() {
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 }

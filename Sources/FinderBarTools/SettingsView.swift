@@ -4,14 +4,30 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var appModel: AppModel
     @State private var recordingAction: FinderActionService.Action?
+    @State private var launchAtLogin = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("FinderBarTools Settings")
                 .font(.system(size: 22, weight: .semibold, design: .rounded))
 
-            Text("Assign global shortcuts for the menu bar actions. Defaults use Control + Option + Command.")
+            Text("Assign global shortcuts and startup behavior for the menu bar actions.")
                 .foregroundStyle(.secondary)
+
+            Toggle("Launch At Login", isOn: Binding(
+                get: { launchAtLogin },
+                set: { newValue in
+                    launchAtLogin = newValue
+                    appModel.launchAtLoginManager.setEnabled(newValue)
+                    launchAtLogin = appModel.launchAtLoginManager.isEnabled
+                }
+            ))
+
+            if let message = appModel.launchAtLoginManager.lastErrorMessage {
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
 
             Divider()
 
@@ -42,6 +58,9 @@ struct SettingsView: View {
         .padding(24)
         .frame(width: 520)
         .background(keyRecorder)
+        .onAppear {
+            launchAtLogin = appModel.launchAtLoginManager.isEnabled
+        }
     }
 
     private var keyRecorder: some View {

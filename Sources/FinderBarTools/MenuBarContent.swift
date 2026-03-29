@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarContent: View {
     @EnvironmentObject private var appModel: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -21,16 +22,10 @@ struct MenuBarContent: View {
 
             Divider()
 
-            if #available(macOS 14.0, *) {
-                SettingsLink {
+            Button {
+                openWindow(id: FinderBarToolsApp.settingsWindowID)
+            } label: {
                     Label("Settings…", systemImage: "gearshape")
-                }
-            } else {
-                Button {
-                    appModel.openSettingsFallback()
-                } label: {
-                    Label("Settings…", systemImage: "gearshape")
-                }
             }
 
             Button("Quit FinderBarTools") {
