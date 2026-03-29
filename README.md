@@ -1,10 +1,11 @@
 # FinderBarTools
 
-FinderBarTools is a macOS menu bar app for common Finder-focused actions. The current version keeps the scope intentionally narrow and includes only four commands:
+FinderBarTools is a macOS menu bar app for common Finder-focused actions. The current version includes five commands:
 
 - New Text File
 - Open Terminal Here
 - Open iTerm Here
+- Open in VS Code
 - Copy Path
 
 The app is designed as a clean starting point for a larger Finder utility menu, similar to the contextual menu tools you showed, but implemented as your own lightweight macOS app.
@@ -19,6 +20,7 @@ The app is working as a regular macOS menu bar app.
 - It shows a custom app icon
 - It opens a Settings window
 - It supports global keyboard shortcuts
+- It supports colorful menu bar icon with preset and custom colors
 
 ## Project Goals
 
@@ -51,7 +53,10 @@ This keeps the first version practical:
 - Finder context comes from the front Finder window
 - File creation uses the same numbered naming rule you requested
 - Terminal and iTerm open in the current Finder folder
+- VS Code opens the current Finder folder as a workspace
 - Copy Path copies the current Finder folder path to the clipboard
+- iTerm and VS Code menu items display their real app icons
+- The menu bar icon can be tinted with a custom color from Settings
 - Global hotkeys are registered with Carbon and saved in `UserDefaults`
 - The app runs as a menu bar utility without a Dock icon
 
@@ -60,6 +65,7 @@ This keeps the first version practical:
 - New Text File: `Control + Option + Command + N`
 - Open Terminal Here: `Control + Option + Command + T`
 - Open iTerm Here: `Control + Option + Command + I`
+- Open in VS Code: `Control + Option + Command + V`
 - Copy Path: `Control + Option + Command + P`
 
 ## Expected Permissions
@@ -69,6 +75,7 @@ When you first run the app, macOS may ask for permission to control:
 - Finder
 - Terminal
 - iTerm
+- Visual Studio Code
 - System Events
 
 That is expected because the app uses AppleScript automation.
@@ -170,16 +177,21 @@ Important note:
 
 ## Customizing Shortcuts
 
-Open the menu bar app and choose `Settings…`.
+Open the menu bar app and choose `Settings`.
 
 From there you can assign global shortcuts for:
 
 - New Text File
 - Open Terminal Here
 - Open iTerm Here
+- Open in VS Code
 - Copy Path
 
 Recorded shortcuts are saved automatically.
+
+## Customizing the Menu Bar Icon
+
+In Settings, toggle **Colorful Icon** to tint the menu bar icon. Choose from eight preset colors (Blue, Purple, Pink, Red, Orange, Green, Teal, White) or pick a custom color with the color picker. The default is a standard monochrome icon that adapts to your menu bar appearance.
 
 ## Key Files Worth Editing Later
 

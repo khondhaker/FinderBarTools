@@ -10,9 +10,14 @@ struct FinderBarToolsApp: App {
             MenuBarContent()
                 .environmentObject(appModel)
         } label: {
-            Image(systemName: "filemenu.and.cursorarrow")
-                .symbolRenderingMode(appModel.iconColorEnabled ? .palette : .monochrome)
-                .foregroundStyle(appModel.iconColorEnabled ? appModel.iconColor : .primary)
+            if appModel.iconColorEnabled {
+                Image(systemName: "filemenu.and.cursorarrow")
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(appModel.iconColor)
+            } else {
+                Image(systemName: "filemenu.and.cursorarrow")
+                    .fontWeight(.medium)
+            }
         }
         .menuBarExtraStyle(.window)
 
