@@ -31,6 +31,50 @@ struct SettingsView: View {
 
             Divider()
 
+            // Icon color
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Menu Bar Icon")
+                    .font(.headline)
+
+                Toggle("Colorful Icon", isOn: $appModel.iconColorEnabled)
+
+                if appModel.iconColorEnabled {
+                    HStack(spacing: 8) {
+                        ForEach(AppModel.presetIconColors, id: \.0) { name, color in
+                            Button {
+                                appModel.iconColor = color
+                            } label: {
+                                Circle()
+                                    .fill(color)
+                                    .frame(width: 22, height: 22)
+                                    .overlay(
+                                        Circle()
+                                            .strokeBorder(Color.primary.opacity(0.3), lineWidth: 1)
+                                    )
+                                    .overlay(
+                                        appModel.iconColor.description == color.description
+                                            ? Image(systemName: "checkmark")
+                                                .font(.system(size: 10, weight: .bold))
+                                                .foregroundStyle(.white.shadow(.drop(radius: 1)))
+                                            : nil
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .help(name)
+                        }
+
+                        Divider()
+                            .frame(height: 22)
+
+                        ColorPicker("", selection: $appModel.iconColor, supportsOpacity: false)
+                            .labelsHidden()
+                            .help("Custom color")
+                    }
+                }
+            }
+
+            Divider()
+
             ForEach(FinderActionService.Action.allCases) { action in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {

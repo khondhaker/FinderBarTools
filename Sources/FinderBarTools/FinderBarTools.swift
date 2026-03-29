@@ -10,7 +10,9 @@ struct FinderBarToolsApp: App {
             MenuBarContent()
                 .environmentObject(appModel)
         } label: {
-            Label("FinderBarTools", systemImage: "folder.badge.gearshape")
+            Image(systemName: "filemenu.and.cursorarrow")
+                .symbolRenderingMode(appModel.iconColorEnabled ? .palette : .monochrome)
+                .foregroundStyle(appModel.iconColorEnabled ? appModel.iconColor : .primary)
         }
         .menuBarExtraStyle(.window)
 

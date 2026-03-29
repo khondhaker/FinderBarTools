@@ -102,6 +102,8 @@ private extension FinderActionService.Action {
             return 3
         case .copyPath:
             return 4
+        case .openVSCodeHere:
+            return 5
         }
     }
 }

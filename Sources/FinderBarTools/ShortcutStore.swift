@@ -50,5 +50,6 @@ final class ShortcutStore: ObservableObject {
         .openTerminalHere: Shortcut(keyCode: UInt32(kVK_ANSI_T), modifiers: defaultModifiers),
         .openITermHere: Shortcut(keyCode: UInt32(kVK_ANSI_I), modifiers: defaultModifiers),
         .copyPath: Shortcut(keyCode: UInt32(kVK_ANSI_P), modifiers: defaultModifiers),
+        .openVSCodeHere: Shortcut(keyCode: UInt32(kVK_ANSI_V), modifiers: defaultModifiers),
     ]
 }

@@ -6,6 +6,7 @@ struct FinderActionService {
         case openTerminalHere
         case openITermHere
         case copyPath
+        case openVSCodeHere
 
         var id: String { rawValue }
 
@@ -19,6 +20,8 @@ struct FinderActionService {
                 return "Open iTerm Here"
             case .copyPath:
                 return "Copy Path"
+            case .openVSCodeHere:
+                return "Open in VS Code"
             }
         }
 
@@ -29,9 +32,23 @@ struct FinderActionService {
             case .openTerminalHere:
                 return "terminal"
             case .openITermHere:
-                return "chevron.left.forwardslash.chevron.right"
+                return "terminal"
             case .copyPath:
-                return "link"
+                return "doc.on.clipboard"
+            case .openVSCodeHere:
+                return "curlybraces"
+            }
+        }
+
+        /// Bundle identifier used to load the real app icon for actions that launch external apps.
+        var appBundleIdentifier: String? {
+            switch self {
+            case .openITermHere:
+                return "com.googlecode.iterm2"
+            case .openVSCodeHere:
+                return "com.microsoft.VSCode"
+            default:
+                return nil
             }
         }
     }
@@ -123,6 +140,20 @@ struct FinderActionService {
 
             set the clipboard to folderPath
             display notification folderPath with title "Path Copied"
+            """
+
+        case .openVSCodeHere:
+            script = """
+            tell application "Finder"
+                if (count of windows) is 0 then
+                    display notification "No Finder window is open." with title "Open in VS Code"
+                    return
+                end if
+
+                set currentFolder to (target of front window as alias)
+            end tell
+
+            do shell script "open -a 'Visual Studio Code' " & quoted form of POSIX path of currentFolder
             """
         }
 
