@@ -21,6 +21,9 @@ The app is working as a regular macOS menu bar app.
 - It opens a Settings window
 - It supports global keyboard shortcuts
 - It supports colorful menu bar icon with preset and custom colors
+- It validates shortcut conflicts in Settings
+- It shows lightweight in-menu progress, success, and error feedback for actions
+- It supports Finder selection, Finder windows, and the Desktop as action context
 
 ## Project Goals
 
@@ -50,15 +53,31 @@ The app uses `MenuBarExtra` from SwiftUI to place a menu in the macOS menu bar. 
 
 This keeps the first version practical:
 
-- Finder context comes from the front Finder window
+- Finder context comes from the current Finder selection, the front Finder window, or the Desktop
 - File creation uses the same numbered naming rule you requested
-- Terminal and iTerm open in the current Finder folder
-- VS Code opens the current Finder folder as a workspace
-- Copy Path copies the current Finder folder path to the clipboard
+- Terminal and iTerm open in the resolved Finder folder context
+- VS Code opens the resolved Finder folder context as a workspace
+- Copy Path copies the resolved Finder folder path to the clipboard
 - iTerm and VS Code menu items display their real app icons
 - The menu bar icon can be tinted with a custom color from Settings
 - Global hotkeys are registered with Carbon and saved in `UserDefaults`
+- Duplicate shortcut assignments are blocked with a visible error message
+- The menu shows a spinner while actions are running, then a short success or error status
+- Copy Path uses a distinct clipboard-themed confirmation pulse
 - The app runs as a menu bar utility without a Dock icon
+
+## Recent Changes
+
+The latest updates added several quality-of-life improvements:
+
+- Fixed silent global shortcut conflicts by rejecting duplicate shortcut assignments in Settings
+- Improved shortcut recording so `Escape` cancels cleanly and invalid modifier-less captures exit with feedback
+- Fixed shortcut label rendering so the default `Open in VS Code` shortcut shows `V` correctly and custom keys display more reliably
+- Fixed preset icon color selection so the chosen preset stays highlighted after relaunch
+- Added lightweight menu feedback with running, success, and error states
+- Added a clipboard-specific pulse animation for `Copy Path`
+- Added support for Finder selection and Desktop fallback, so actions no longer require an open Finder window
+- Added Settings credit text: `Copyright 2026 Khondhaker Al Momin`
 
 ## Default Shortcuts
 
@@ -189,9 +208,24 @@ From there you can assign global shortcuts for:
 
 Recorded shortcuts are saved automatically.
 
+Additional shortcut behavior:
+
+- Duplicate shortcuts are not allowed
+- Press `Escape` while recording to cancel
+- Shortcuts must include at least one modifier key
+
 ## Customizing the Menu Bar Icon
 
 In Settings, toggle **Colorful Icon** to tint the menu bar icon. Choose from eight preset colors (Blue, Purple, Pink, Red, Orange, Green, Teal, White) or pick a custom color with the color picker. The default is a standard monochrome icon that adapts to your menu bar appearance.
+
+## Action Feedback
+
+When you trigger an action from the menu:
+
+- The selected row shows a small spinner while the action is running
+- Successful actions show a brief confirmation state in the row and a short status line below the menu actions
+- Errors show an orange warning state
+- `Copy Path` uses a clipboard-themed confirmation instead of the generic success icon
 
 ## Key Files Worth Editing Later
 
@@ -230,7 +264,6 @@ gh repo create FinderBarTools --public --source=. --remote=origin --push
 
 ## Planned Next Steps
 
-- Add richer Finder selection support
-- Add clearer action success/failure feedback
-- Support Finder selection, not just the front window
 - Package the app as a polished macOS utility
+- Add even richer Finder selection handling for more file-specific workflows
+- Add optional preferences for action feedback timing and style

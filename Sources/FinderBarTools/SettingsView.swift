@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject private var appModel: AppModel
     @State private var recordingAction: FinderActionService.Action?
     @State private var launchAtLogin = false
+    @State private var shortcutErrorMessage: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -25,6 +26,12 @@ struct SettingsView: View {
 
             if let message = appModel.launchAtLoginManager.lastErrorMessage {
                 Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+
+            if let shortcutErrorMessage {
+                Text(shortcutErrorMessage)
                     .font(.caption)
                     .foregroundStyle(.red)
             }
@@ -52,7 +59,7 @@ struct SettingsView: View {
                                             .strokeBorder(Color.primary.opacity(0.3), lineWidth: 1)
                                     )
                                     .overlay(
-                                        appModel.iconColor.description == color.description
+                                        appModel.isPresetIconColor(color)
                                             ? Image(systemName: "checkmark")
                                                 .font(.system(size: 10, weight: .bold))
                                                 .foregroundStyle(.white.shadow(.drop(radius: 1)))
@@ -87,7 +94,8 @@ struct SettingsView: View {
                     Spacer()
 
                     Button(recordingAction == action ? "Press Keys…" : appModel.shortcutLabel(for: action)) {
-                        recordingAction = action
+                        shortcutErrorMessage = nil
+                        recordingAction = recordingAction == action ? nil : action
                     }
                     .keyboardShortcut(.defaultAction)
                 }
@@ -98,6 +106,10 @@ struct SettingsView: View {
             Text("Recorded shortcuts are saved automatically.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+            Text("Copyright 2026 Khondhaker Al Momin")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
         }
         .padding(24)
         .frame(width: 520)
@@ -108,18 +120,30 @@ struct SettingsView: View {
     }
 
     private var keyRecorder: some View {
-        KeyRecorderView(recordingAction: $recordingAction) { keyCode, modifiers in
+        KeyRecorderView(recordingAction: $recordingAction, onCancel: {
+            recordingAction = nil
+            shortcutErrorMessage = nil
+        }) { keyCode, modifiers in
             guard let action = recordingAction else {
                 return
             }
 
             let filtered = modifiers.intersection([.command, .option, .control, .shift])
             guard filtered.isEmpty == false else {
+                shortcutErrorMessage = "Shortcuts must include Command, Option, Control, or Shift."
+                recordingAction = nil
                 return
             }
 
             let shortcut = Shortcut(keyCode: UInt32(keyCode), modifiers: UInt32(filtered.rawValue))
+            if let existingAction = appModel.shortcutStore.action(using: shortcut, excluding: action) {
+                shortcutErrorMessage = "\"\(shortcut.displayString)\" is already assigned to \(existingAction.title)."
+                recordingAction = nil
+                return
+            }
+
             appModel.shortcutStore.update(shortcut: shortcut, for: action)
+            shortcutErrorMessage = nil
             recordingAction = nil
         }
         .frame(width: 0, height: 0)
@@ -128,16 +152,20 @@ struct SettingsView: View {
 
 private struct KeyRecorderView: NSViewRepresentable {
     @Binding var recordingAction: FinderActionService.Action?
+    let onCancel: () -> Void
     let onRecord: (UInt16, NSEvent.ModifierFlags) -> Void
 
     func makeNSView(context: Context) -> KeyRecorderNSView {
         let view = KeyRecorderNSView()
+        view.onCancel = onCancel
         view.onRecord = onRecord
         return view
     }
 
     func updateNSView(_ nsView: KeyRecorderNSView, context: Context) {
         nsView.isRecording = recordingAction != nil
+        nsView.onCancel = onCancel
+        nsView.onRecord = onRecord
         if recordingAction != nil, nsView.window != nil {
             nsView.window?.makeFirstResponder(nsView)
         }
@@ -145,6 +173,7 @@ private struct KeyRecorderView: NSViewRepresentable {
 }
 
 private final class KeyRecorderNSView: NSView {
+    var onCancel: (() -> Void)?
     var onRecord: ((UInt16, NSEvent.ModifierFlags) -> Void)?
     var isRecording = false
 
@@ -153,6 +182,11 @@ private final class KeyRecorderNSView: NSView {
     override func keyDown(with event: NSEvent) {
         guard isRecording else {
             super.keyDown(with: event)
+            return
+        }
+
+        if event.keyCode == UInt16(kVK_Escape) {
+            onCancel?()
             return
         }
 

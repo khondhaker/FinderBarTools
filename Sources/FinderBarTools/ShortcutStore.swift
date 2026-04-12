@@ -30,6 +30,12 @@ final class ShortcutStore: ObservableObject {
         persist()
     }
 
+    func action(using shortcut: Shortcut, excluding excludedAction: FinderActionService.Action? = nil) -> FinderActionService.Action? {
+        shortcuts.first { action, storedShortcut in
+            action != excludedAction && storedShortcut == shortcut
+        }?.key
+    }
+
     private func persist() {
         let payload = Dictionary(uniqueKeysWithValues: shortcuts.map { ($0.key.rawValue, $0.value) })
         guard let data = try? JSONEncoder().encode(payload) else {

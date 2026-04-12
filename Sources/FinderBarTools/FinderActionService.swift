@@ -25,6 +25,40 @@ struct FinderActionService {
             }
         }
 
+        var successMessage: String {
+            switch self {
+            case .newTextFile:
+                return "Created new text file"
+            case .openTerminalHere:
+                return "Opened Terminal in Finder folder"
+            case .openITermHere:
+                return "Opened iTerm in Finder folder"
+            case .copyPath:
+                return "Copied folder path"
+            case .openVSCodeHere:
+                return "Opened folder in VS Code"
+            }
+        }
+
+        var runningMessage: String {
+            switch self {
+            case .newTextFile:
+                return "Creating text file..."
+            case .openTerminalHere:
+                return "Opening Terminal..."
+            case .openITermHere:
+                return "Opening iTerm..."
+            case .copyPath:
+                return "Copying path..."
+            case .openVSCodeHere:
+                return "Opening VS Code..."
+            }
+        }
+
+        var usesClipboardPulse: Bool {
+            self == .copyPath
+        }
+
         var systemImage: String {
             switch self {
             case .newTextFile:
@@ -53,23 +87,36 @@ struct FinderActionService {
         }
     }
 
-    func run(_ action: Action) {
+    @discardableResult
+    func run(_ action: Action) -> Result<Void, Error> {
         let script: String
+        let finderContextScript = """
+        tell application "Finder"
+            if not (exists Finder window 1) and (count of selection) > 0 then
+                set selectedItem to item 1 of (get selection)
+                if class of selectedItem is folder then
+                    set targetAlias to (selectedItem as alias)
+                else
+                    set targetAlias to (container of selectedItem as alias)
+                end if
+            else if (count of windows) > 0 then
+                set targetAlias to (target of front window as alias)
+            else
+                set targetAlias to (desktop as alias)
+            end if
+        end tell
+
+        set targetPOSIXPath to POSIX path of targetAlias
+        """
 
         switch action {
         case .newTextFile:
             script = """
-            tell application "Finder"
-                if (count of windows) is 0 then
-                    display notification "No Finder window is open." with title "New Text File"
-                    return
-                end if
+            \(finderContextScript)
 
-                set currentFolder to (target of front window as alias)
-                set basePath to POSIX path of currentFolder
-                set fileName to "new document.txt"
-                set newFilePath to basePath & fileName
-            end tell
+            set basePath to targetPOSIXPath
+            set fileName to "new document.txt"
+            set newFilePath to basePath & fileName
 
             set counter to 1
             tell application "System Events"
@@ -91,76 +138,49 @@ struct FinderActionService {
 
         case .openTerminalHere:
             script = """
-            tell application "Finder"
-                if (count of windows) is 0 then
-                    display notification "No Finder window is open." with title "Open Terminal Here"
-                    return
-                end if
-
-                set currentFolder to (target of front window as alias)
-            end tell
+            \(finderContextScript)
 
             tell application "Terminal"
                 activate
-                do script "cd " & quoted form of POSIX path of currentFolder & "; clear"
+                do script "cd " & quoted form of targetPOSIXPath & "; clear"
             end tell
             """
 
         case .openITermHere:
             script = """
-            tell application "Finder"
-                if (count of windows) is 0 then
-                    display notification "No Finder window is open." with title "Open iTerm Here"
-                    return
-                end if
-
-                set currentFolder to (target of front window as alias)
-            end tell
+            \(finderContextScript)
 
             tell application "iTerm"
                 activate
                 create window with default profile
                 tell current session of current window
-                    write text "cd " & quoted form of POSIX path of currentFolder & " && clear"
+                    write text "cd " & quoted form of targetPOSIXPath & " && clear"
                 end tell
             end tell
             """
 
         case .copyPath:
             script = """
-            tell application "Finder"
-                if (count of windows) is 0 then
-                    display notification "No Finder window is open." with title "Copy Path"
-                    return
-                end if
+            \(finderContextScript)
 
-                set currentFolder to (target of front window as alias)
-                set folderPath to POSIX path of currentFolder
-            end tell
-
-            set the clipboard to folderPath
-            display notification folderPath with title "Path Copied"
+            set the clipboard to targetPOSIXPath
+            display notification targetPOSIXPath with title "Path Copied"
             """
 
         case .openVSCodeHere:
             script = """
-            tell application "Finder"
-                if (count of windows) is 0 then
-                    display notification "No Finder window is open." with title "Open in VS Code"
-                    return
-                end if
+            \(finderContextScript)
 
-                set currentFolder to (target of front window as alias)
-            end tell
-
-            do shell script "open -a 'Visual Studio Code' " & quoted form of POSIX path of currentFolder
+            do shell script "open -a 'Visual Studio Code' " & quoted form of targetPOSIXPath
             """
         }
 
         do {
             try AppleScriptRunner.run(script)
+            return .success(())
         } catch {
             showError(error.localizedDescription)
+            return .failure(error)
         }
     }
 
