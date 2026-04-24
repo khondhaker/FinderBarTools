@@ -1,11 +1,13 @@
 import Carbon
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @EnvironmentObject private var appModel: AppModel
     @State private var recordingAction: FinderActionService.Action?
     @State private var launchAtLogin = false
     @State private var shortcutErrorMessage: String?
+    @State private var draggedAction: FinderActionService.Action?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -87,60 +89,20 @@ struct SettingsView: View {
                     .font(.headline)
 
                 ForEach(appModel.actionOrder) { action in
-                    HStack(spacing: 10) {
-                        Toggle(isOn: Binding(
-                            get: { appModel.isActionEnabled(action) },
-                            set: { appModel.setAction(action, enabled: $0) }
-                        )) {
-                            HStack(spacing: 8) {
-                                Image(systemName: action.systemImage)
-                                    .frame(width: 18)
-
-                                Text(action.title)
-                            }
+                    featureRow(for: action)
+                        .opacity(draggedAction == action ? 0.45 : 1)
+                        .onDrag {
+                            draggedAction = action
+                            return NSItemProvider(object: action.id as NSString)
                         }
-
-                        Spacer()
-
-                        Button {
-                            appModel.moveAction(action, direction: .up)
-                        } label: {
-                            Image(systemName: "chevron.up")
-                        }
-                        .buttonStyle(.borderless)
-                        .disabled(appModel.canMoveAction(action, direction: .up) == false)
-                        .help("Move up")
-
-                        Button {
-                            appModel.moveAction(action, direction: .down)
-                        } label: {
-                            Image(systemName: "chevron.down")
-                        }
-                        .buttonStyle(.borderless)
-                        .disabled(appModel.canMoveAction(action, direction: .down) == false)
-                        .help("Move down")
-                    }
-                }
-            }
-
-            Divider()
-
-            ForEach(appModel.actionOrder) { action in
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(action.title)
-                        Text(action.systemImage)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    Button(recordingAction == action ? "Press Keys…" : appModel.shortcutLabel(for: action)) {
-                        shortcutErrorMessage = nil
-                        recordingAction = recordingAction == action ? nil : action
-                    }
-                    .keyboardShortcut(.defaultAction)
+                        .onDrop(
+                            of: [.text],
+                            delegate: ActionDropDelegate(
+                                targetAction: action,
+                                draggedAction: $draggedAction,
+                                appModel: appModel
+                            )
+                        )
                 }
             }
 
@@ -159,6 +121,60 @@ struct SettingsView: View {
         .background(keyRecorder)
         .onAppear {
             launchAtLogin = appModel.launchAtLoginManager.isEnabled
+        }
+    }
+
+    private func featureRow(for action: FinderActionService.Action) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "line.3.horizontal")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.tertiary)
+                .frame(width: 16)
+                .help("Drag to reorder")
+
+            Toggle("", isOn: Binding(
+                get: { appModel.isActionEnabled(action) },
+                set: { appModel.setAction(action, enabled: $0) }
+            ))
+            .labelsHidden()
+            .help(appModel.isActionEnabled(action) ? "Disable \(action.title)" : "Enable \(action.title)")
+
+            Image(systemName: action.systemImage)
+                .font(.system(size: 15, weight: .medium))
+                .frame(width: 22)
+                .foregroundStyle(.secondary)
+
+            Text(action.title)
+                .lineLimit(1)
+
+            Spacer(minLength: 12)
+
+            Button(recordingAction == action ? "Press Keys..." : appModel.shortcutLabel(for: action)) {
+                shortcutErrorMessage = nil
+                recordingAction = recordingAction == action ? nil : action
+            }
+            .frame(width: 118)
+            .help("Record shortcut")
+
+            Button {
+                appModel.moveAction(action, direction: .up)
+            } label: {
+                Image(systemName: "chevron.up")
+                    .frame(width: 18, height: 18)
+            }
+            .buttonStyle(.borderless)
+            .disabled(appModel.canMoveAction(action, direction: .up) == false)
+            .help("Move up")
+
+            Button {
+                appModel.moveAction(action, direction: .down)
+            } label: {
+                Image(systemName: "chevron.down")
+                    .frame(width: 18, height: 18)
+            }
+            .buttonStyle(.borderless)
+            .disabled(appModel.canMoveAction(action, direction: .down) == false)
+            .help("Move down")
         }
     }
 
@@ -190,6 +206,30 @@ struct SettingsView: View {
             recordingAction = nil
         }
         .frame(width: 0, height: 0)
+    }
+}
+
+private struct ActionDropDelegate: DropDelegate {
+    let targetAction: FinderActionService.Action
+    @Binding var draggedAction: FinderActionService.Action?
+    let appModel: AppModel
+
+    func dropEntered(info: DropInfo) {
+        guard let draggedAction,
+              draggedAction != targetAction else { return }
+
+        withAnimation(.easeInOut(duration: 0.12)) {
+            appModel.moveAction(draggedAction, before: targetAction)
+        }
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedAction = nil
+        return true
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
     }
 }
 

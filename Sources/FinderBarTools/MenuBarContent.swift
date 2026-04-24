@@ -86,6 +86,7 @@ struct MenuBarContent: View {
             HStack {
                 Button("Settings") {
                     openWindow(id: FinderBarToolsApp.settingsWindowID)
+                    appModel.bringSettingsWindowToFront()
                 }
                 .buttonStyle(.plain)
 

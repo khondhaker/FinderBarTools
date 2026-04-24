@@ -46,7 +46,7 @@ struct FinderActionService {
             case .openITermHere:
                 return "Opened iTerm in Finder folder"
             case .copyPath:
-                return "Copied folder path"
+                return "Copied path"
             case .openVSCodeHere:
                 return "Opened folder in VS Code"
             case .openAntigravityHere:
@@ -128,6 +128,20 @@ struct FinderActionService {
 
         set targetPOSIXPath to POSIX path of targetAlias
         """
+        let finderPathContextScript = """
+        tell application "Finder"
+            set selectedItems to (get selection)
+            if (count of selectedItems) > 0 then
+                set targetAlias to (item 1 of selectedItems as alias)
+            else if (count of windows) > 0 then
+                set targetAlias to (target of front window as alias)
+            else
+                set targetAlias to (desktop as alias)
+            end if
+        end tell
+
+        set targetPOSIXPath to POSIX path of targetAlias
+        """
 
         switch action {
         case .newTextFile:
@@ -181,7 +195,7 @@ struct FinderActionService {
 
         case .copyPath:
             script = """
-            \(finderContextScript)
+            \(finderPathContextScript)
 
             set the clipboard to targetPOSIXPath
             display notification targetPOSIXPath with title "Path Copied"

@@ -148,6 +148,16 @@ final class AppModel: ObservableObject {
         actionOrder.swapAt(currentIndex, destinationIndex)
     }
 
+    func moveAction(_ action: FinderActionService.Action, before targetAction: FinderActionService.Action) {
+        guard action != targetAction,
+              let sourceIndex = actionOrder.firstIndex(of: action),
+              let targetIndex = actionOrder.firstIndex(of: targetAction) else { return }
+
+        let movedAction = actionOrder.remove(at: sourceIndex)
+        let adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex
+        actionOrder.insert(movedAction, at: adjustedTargetIndex)
+    }
+
     func canMoveAction(_ action: FinderActionService.Action, direction: ActionMoveDirection) -> Bool {
         guard let index = actionOrder.firstIndex(of: action) else { return false }
 
@@ -207,6 +217,25 @@ final class AppModel: ObservableObject {
 
     func shortcutLabel(for action: FinderActionService.Action) -> String {
         shortcutStore.shortcut(for: action).displayString
+    }
+
+    func bringSettingsWindowToFront() {
+        NSApplication.shared.activate(ignoringOtherApps: true)
+
+        Task { @MainActor in
+            await Task.yield()
+
+            if let settingsWindow = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == FinderBarToolsApp.settingsWindowID }) {
+                settingsWindow.level = .floating
+                settingsWindow.orderFrontRegardless()
+                settingsWindow.makeKey()
+
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(250))
+                    settingsWindow.level = .normal
+                }
+            }
+        }
     }
 
     func isPresetIconColor(_ color: Color) -> Bool {

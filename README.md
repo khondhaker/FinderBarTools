@@ -61,7 +61,7 @@ This keeps the first version practical:
 - Terminal and iTerm open in the resolved Finder folder context
 - VS Code opens the resolved Finder folder context as a workspace
 - Antigravity opens the resolved Finder folder context as a workspace
-- Copy Path copies the resolved Finder folder path to the clipboard
+- Copy Path copies the selected file or folder path, falling back to the resolved Finder folder
 - iTerm, VS Code, and Antigravity menu items display their real app icons
 - The menu bar icon can be tinted with a custom color from Settings
 - Global hotkeys are registered with Carbon and saved in `UserDefaults`
