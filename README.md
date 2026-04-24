@@ -1,11 +1,12 @@
 # FinderBarTools
 
-FinderBarTools is a macOS menu bar app for common Finder-focused actions. The current version includes five commands:
+FinderBarTools is a macOS menu bar app for common Finder-focused actions. The current version includes six commands:
 
 - New Text File
 - Open Terminal Here
 - Open iTerm Here
 - Open in VS Code
+- Open in Antigravity
 - Copy Path
 
 The app is designed as a clean starting point for a larger Finder utility menu, similar to the contextual menu tools you showed, but implemented as your own lightweight macOS app.
@@ -21,6 +22,8 @@ The app is working as a regular macOS menu bar app.
 - It opens a Settings window
 - It supports global keyboard shortcuts
 - It supports colorful menu bar icon with preset and custom colors
+- It supports enabling or disabling individual menu actions from Settings
+- It supports reordering menu actions from Settings
 - It validates shortcut conflicts in Settings
 - It shows lightweight in-menu progress, success, and error feedback for actions
 - It supports Finder selection, Finder windows, and the Desktop as action context
@@ -57,10 +60,13 @@ This keeps the first version practical:
 - File creation uses the same numbered naming rule you requested
 - Terminal and iTerm open in the resolved Finder folder context
 - VS Code opens the resolved Finder folder context as a workspace
+- Antigravity opens the resolved Finder folder context as a workspace
 - Copy Path copies the resolved Finder folder path to the clipboard
-- iTerm and VS Code menu items display their real app icons
+- iTerm, VS Code, and Antigravity menu items display their real app icons
 - The menu bar icon can be tinted with a custom color from Settings
 - Global hotkeys are registered with Carbon and saved in `UserDefaults`
+- Disabled actions are hidden from the menu and ignored by their global hotkeys
+- Menu action order can be changed from Settings and is saved in `UserDefaults`
 - Duplicate shortcut assignments are blocked with a visible error message
 - The menu shows a spinner while actions are running, then a short success or error status
 - Copy Path uses a distinct clipboard-themed confirmation pulse
@@ -70,6 +76,9 @@ This keeps the first version practical:
 
 The latest updates added several quality-of-life improvements:
 
+- Added `Open in Antigravity` with its real app icon and a default global shortcut
+- Added custom menu ordering from Settings
+- Added per-feature toggles in Settings so individual actions can be temporarily hidden
 - Fixed silent global shortcut conflicts by rejecting duplicate shortcut assignments in Settings
 - Improved shortcut recording so `Escape` cancels cleanly and invalid modifier-less captures exit with feedback
 - Fixed shortcut label rendering so the default `Open in VS Code` shortcut shows `V` correctly and custom keys display more reliably
@@ -85,6 +94,7 @@ The latest updates added several quality-of-life improvements:
 - Open Terminal Here: `Control + Option + Command + T`
 - Open iTerm Here: `Control + Option + Command + I`
 - Open in VS Code: `Control + Option + Command + V`
+- Open in Antigravity: `Control + Option + Command + A`
 - Copy Path: `Control + Option + Command + P`
 
 ## Expected Permissions
@@ -95,6 +105,7 @@ When you first run the app, macOS may ask for permission to control:
 - Terminal
 - iTerm
 - Visual Studio Code
+- Antigravity
 - System Events
 
 That is expected because the app uses AppleScript automation.
@@ -194,6 +205,14 @@ Important note:
 - Each new Xcode build creates a fresh app in `.derived`
 - If you make code changes later, rebuild and copy the new app into `Applications` again
 
+## Customizing Enabled Features
+
+Open `Settings` and use the `Features` toggles to temporarily show or hide individual actions. Disabled actions are removed from the menu and their global shortcuts do nothing until the action is turned back on.
+
+Use the up and down arrow buttons in the same section to reorder actions. The menu and shortcut list follow that saved order.
+
+The setting is saved automatically, so your feature list stays the same after relaunch.
+
 ## Customizing Shortcuts
 
 Open the menu bar app and choose `Settings`.
@@ -204,6 +223,7 @@ From there you can assign global shortcuts for:
 - Open Terminal Here
 - Open iTerm Here
 - Open in VS Code
+- Open in Antigravity
 - Copy Path
 
 Recorded shortcuts are saved automatically.

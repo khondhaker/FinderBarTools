@@ -57,5 +57,6 @@ final class ShortcutStore: ObservableObject {
         .openITermHere: Shortcut(keyCode: UInt32(kVK_ANSI_I), modifiers: defaultModifiers),
         .copyPath: Shortcut(keyCode: UInt32(kVK_ANSI_P), modifiers: defaultModifiers),
         .openVSCodeHere: Shortcut(keyCode: UInt32(kVK_ANSI_V), modifiers: defaultModifiers),
+        .openAntigravityHere: Shortcut(keyCode: UInt32(kVK_ANSI_A), modifiers: defaultModifiers),
     ]
 }

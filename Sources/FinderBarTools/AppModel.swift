@@ -31,6 +31,14 @@ final class AppModel: ObservableObject {
         didSet { persistIconColor() }
     }
 
+    @Published private var disabledActionIDs: Set<String> {
+        didSet { persistDisabledActions() }
+    }
+
+    @Published private(set) var actionOrder: [FinderActionService.Action] {
+        didSet { persistActionOrder() }
+    }
+
     @Published private(set) var runningAction: RunningAction?
     @Published private(set) var actionFeedback: ActionFeedback?
 
@@ -48,6 +56,8 @@ final class AppModel: ObservableObject {
     init() {
         self.iconColorEnabled = UserDefaults.standard.bool(forKey: "iconColorEnabled")
         self.iconColor = Self.loadIconColor()
+        self.disabledActionIDs = Self.loadDisabledActionIDs()
+        self.actionOrder = Self.loadActionOrder()
 
         hotkeyManager = HotKeyManager(shortcutStore: shortcutStore) { [weak self] action in
             self?.run(action)
@@ -70,7 +80,88 @@ final class AppModel: ObservableObject {
         return Color(red: r, green: g, blue: b)
     }
 
+    private func persistDisabledActions() {
+        let validIDs = Set(FinderActionService.Action.allCases.map(\.id))
+        let payload = disabledActionIDs.intersection(validIDs).sorted()
+        UserDefaults.standard.set(payload, forKey: "disabledActionIDs")
+    }
+
+    private static func loadDisabledActionIDs() -> Set<String> {
+        let validIDs = Set(FinderActionService.Action.allCases.map(\.id))
+        let storedIDs = UserDefaults.standard.stringArray(forKey: "disabledActionIDs") ?? []
+        return Set(storedIDs).intersection(validIDs)
+    }
+
+    private func persistActionOrder() {
+        UserDefaults.standard.set(actionOrder.map(\.id), forKey: "actionOrder")
+    }
+
+    private static func loadActionOrder() -> [FinderActionService.Action] {
+        let storedIDs = UserDefaults.standard.stringArray(forKey: "actionOrder") ?? []
+        var seenIDs = Set<String>()
+        let storedActions = storedIDs.compactMap { id -> FinderActionService.Action? in
+            guard seenIDs.insert(id).inserted else { return nil }
+            return FinderActionService.Action(rawValue: id)
+        }
+        let missingActions = FinderActionService.Action.displayOrder.filter { storedActions.contains($0) == false }
+        let orderedActions = storedActions + missingActions
+
+        return orderedActions.isEmpty ? FinderActionService.Action.displayOrder : orderedActions
+    }
+
+    func isActionEnabled(_ action: FinderActionService.Action) -> Bool {
+        disabledActionIDs.contains(action.id) == false
+    }
+
+    func enabledActionsInPreferredOrder() -> [FinderActionService.Action] {
+        actionOrder.filter { isActionEnabled($0) }
+    }
+
+    func setAction(_ action: FinderActionService.Action, enabled: Bool) {
+        if enabled {
+            disabledActionIDs.remove(action.id)
+        } else {
+            disabledActionIDs.insert(action.id)
+
+            if runningAction?.action == action {
+                runningAction = nil
+            }
+
+            if actionFeedback?.action == action {
+                actionFeedback = nil
+            }
+        }
+    }
+
+    func moveAction(_ action: FinderActionService.Action, direction: ActionMoveDirection) {
+        guard let currentIndex = actionOrder.firstIndex(of: action) else { return }
+
+        let destinationIndex: Int
+        switch direction {
+        case .up:
+            destinationIndex = actionOrder.index(before: currentIndex)
+        case .down:
+            destinationIndex = actionOrder.index(after: currentIndex)
+        }
+
+        guard actionOrder.indices.contains(destinationIndex) else { return }
+        actionOrder.swapAt(currentIndex, destinationIndex)
+    }
+
+    func canMoveAction(_ action: FinderActionService.Action, direction: ActionMoveDirection) -> Bool {
+        guard let index = actionOrder.firstIndex(of: action) else { return false }
+
+        switch direction {
+        case .up:
+            return index > actionOrder.startIndex
+        case .down:
+            return index < actionOrder.index(before: actionOrder.endIndex)
+        }
+    }
+
     func run(_ action: FinderActionService.Action) {
+        guard isActionEnabled(action) else { return }
+
         feedbackDismissTask?.cancel()
 
         withAnimation(.easeInOut(duration: 0.16)) {
@@ -151,4 +242,9 @@ final class AppModel: ObservableObject {
             }
         }
     }
+}
+
+enum ActionMoveDirection {
+    case up
+    case down
 }

@@ -104,6 +104,8 @@ private extension FinderActionService.Action {
             return 4
         case .openVSCodeHere:
             return 5
+        case .openAntigravityHere:
+            return 6
         }
     }
 }

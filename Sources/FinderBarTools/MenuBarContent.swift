@@ -4,16 +4,12 @@ struct MenuBarContent: View {
     @EnvironmentObject private var appModel: AppModel
     @Environment(\.openWindow) private var openWindow
 
-    private static let orderedActions: [FinderActionService.Action] = [
-        .newTextFile,
-        .openTerminalHere,
-        .openITermHere,
-        .openVSCodeHere,
-        .copyPath,
-    ]
-
     @State private var hoveredAction: FinderActionService.Action?
     @State private var clipboardPulseActive = false
+
+    private var enabledActions: [FinderActionService.Action] {
+        appModel.enabledActionsInPreferredOrder()
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -27,8 +23,24 @@ struct MenuBarContent: View {
                 .padding(.horizontal, 10)
 
             VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(Self.orderedActions.enumerated()), id: \.element.id) { index, action in
-                    actionButton(for: action, isEven: index.isMultiple(of: 2))
+                if enabledActions.isEmpty {
+                    HStack(spacing: 8) {
+                        Image(systemName: "eye.slash")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+
+                        Text("All features are disabled")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 10)
+                } else {
+                    ForEach(Array(enabledActions.enumerated()), id: \.element.id) { index, action in
+                        actionButton(for: action, isEven: index.isMultiple(of: 2))
+                    }
                 }
             }
             .padding(.vertical, 4)

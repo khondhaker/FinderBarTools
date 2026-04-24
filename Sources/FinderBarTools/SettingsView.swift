@@ -82,7 +82,50 @@ struct SettingsView: View {
 
             Divider()
 
-            ForEach(FinderActionService.Action.allCases) { action in
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Features")
+                    .font(.headline)
+
+                ForEach(appModel.actionOrder) { action in
+                    HStack(spacing: 10) {
+                        Toggle(isOn: Binding(
+                            get: { appModel.isActionEnabled(action) },
+                            set: { appModel.setAction(action, enabled: $0) }
+                        )) {
+                            HStack(spacing: 8) {
+                                Image(systemName: action.systemImage)
+                                    .frame(width: 18)
+
+                                Text(action.title)
+                            }
+                        }
+
+                        Spacer()
+
+                        Button {
+                            appModel.moveAction(action, direction: .up)
+                        } label: {
+                            Image(systemName: "chevron.up")
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(appModel.canMoveAction(action, direction: .up) == false)
+                        .help("Move up")
+
+                        Button {
+                            appModel.moveAction(action, direction: .down)
+                        } label: {
+                            Image(systemName: "chevron.down")
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(appModel.canMoveAction(action, direction: .down) == false)
+                        .help("Move down")
+                    }
+                }
+            }
+
+            Divider()
+
+            ForEach(appModel.actionOrder) { action in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(action.title)

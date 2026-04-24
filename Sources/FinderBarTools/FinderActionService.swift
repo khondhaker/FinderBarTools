@@ -7,8 +7,18 @@ struct FinderActionService {
         case openITermHere
         case copyPath
         case openVSCodeHere
+        case openAntigravityHere
 
         var id: String { rawValue }
+
+        static let displayOrder: [Action] = [
+            .newTextFile,
+            .openTerminalHere,
+            .openITermHere,
+            .openVSCodeHere,
+            .openAntigravityHere,
+            .copyPath,
+        ]
 
         var title: String {
             switch self {
@@ -22,6 +32,8 @@ struct FinderActionService {
                 return "Copy Path"
             case .openVSCodeHere:
                 return "Open in VS Code"
+            case .openAntigravityHere:
+                return "Open in Antigravity"
             }
         }
 
@@ -37,6 +49,8 @@ struct FinderActionService {
                 return "Copied folder path"
             case .openVSCodeHere:
                 return "Opened folder in VS Code"
+            case .openAntigravityHere:
+                return "Opened folder in Antigravity"
             }
         }
 
@@ -52,6 +66,8 @@ struct FinderActionService {
                 return "Copying path..."
             case .openVSCodeHere:
                 return "Opening VS Code..."
+            case .openAntigravityHere:
+                return "Opening Antigravity..."
             }
         }
 
@@ -71,6 +87,8 @@ struct FinderActionService {
                 return "doc.on.clipboard"
             case .openVSCodeHere:
                 return "curlybraces"
+            case .openAntigravityHere:
+                return "sparkles"
             }
         }
 
@@ -81,6 +99,8 @@ struct FinderActionService {
                 return "com.googlecode.iterm2"
             case .openVSCodeHere:
                 return "com.microsoft.VSCode"
+            case .openAntigravityHere:
+                return "com.google.antigravity"
             default:
                 return nil
             }
@@ -172,6 +192,13 @@ struct FinderActionService {
             \(finderContextScript)
 
             do shell script "open -a 'Visual Studio Code' " & quoted form of targetPOSIXPath
+            """
+
+        case .openAntigravityHere:
+            script = """
+            \(finderContextScript)
+
+            do shell script "open -a 'Antigravity' " & quoted form of targetPOSIXPath
             """
         }
 
