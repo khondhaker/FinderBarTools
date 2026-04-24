@@ -1,6 +1,8 @@
 .DS_Store
 /.build
 /.derived
+/.derived-release
+/dist
 /Packages
 .idea/
 .vscode/
